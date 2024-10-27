@@ -5,7 +5,11 @@
   <h3>Login </h3>
   <form method="POST">
     {% csrf_token %}
-    {{ form }}
+    {{ form.non_field_errors }}  <!-- Display non-field errors -->
+    {{ form.username.label_tag }}  <!-- Display label for username -->
+    {{ form.username }}  <!-- Display username field -->
+    {{ form.password.label_tag }}  <!-- Display label for password -->
+    {{ form.password }}  <!-- Display password field -->
     <button type="submit">Submit</button>
   </form>
   <a class="signup-link" href="{% url 'accounts:signup' %}">Signup</a>
