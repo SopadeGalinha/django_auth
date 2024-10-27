@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "authentication"
+version = "0.1.0"
+description = "Django authetication service with 2FA and JWT"
+authors = ["Jhonata"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+djangorestframework = "^3.15.2"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.10.0"
+pytest = "^8.3.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
