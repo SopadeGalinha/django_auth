@@ -1,63 +1,124 @@
+Based on the additional images provided, I’ve added more content to expand the document on **Database Partitions in SingleStore**. Here’s the updated structure with these new topics:
+
+---
+
 # Database Partitions in SingleStore
 
-## **Default Partitions**
+## Default Partitions
+- **Default Setup**: SingleStore assigns one partition per CPU by default.
+- **Reference Partition**:
+  - Contains metadata and small datasets replicated to every node.
+- **Replica Partitions**:
+  - Ensure fault tolerance and load balancing.
+  - Created synchronously across paired nodes.
 
-### **What are Partitions?**
-Partitions in SingleStore are the fundamental units of data storage and processing. They divide a database's data into smaller segments, distributed across nodes in the cluster to ensure scalability and performance.
-
-### **How Default Partitions Work**
-- By default, SingleStore creates **one partition per CPU core** available on each leaf node.
-- For example:
-  - If a node has **4 CPUs**, and there are **2 nodes**, the database will have a total of **8 partitions** (4 partitions per node).
-- Partitions include both:
-  - **Primary Partitions**: Actively store data and serve queries.
-  - **Replica Partitions**: Provide high availability and fault tolerance by maintaining a synchronized copy of the primary partition.
-
-### **Partition Replication**
-- **Reference Partitions** are replicated to every node.
-- **Replica Partitions** are created synchronously on paired nodes or load-balanced as needed.
-
-### **Diagram Reference:**
-Refer to the "Default Partitions" diagram to visualize the relationship between the master aggregator, child aggregator, and partitions spread across leaf nodes.
+*Image Reference: Fits with "Default Partitions."*
 
 ---
 
-## **Setting the Number of Partitions**
+## Setting the Number of Partitions
+- Customize partitions during database creation to suit workload requirements.
+- Example command:
+  ```sql
+  CREATE DATABASE db_name PARTITIONS=16;
+  ```
+  - **16 partitions** distributed across nodes, ensuring balanced processing.
 
-### **Customizing Partitions**
-While the default setup works for many use cases, you can explicitly define the number of partitions during database creation to better suit your workload.
-
-### **Example Command**
-To create a database with a specific number of partitions, use the following syntax:
-```sql
-CREATE DATABASE db_name PARTITIONS = 16;
-```
-- This command creates **16 partitions** distributed across the nodes in the cluster.
-  - If there are **2 nodes**, each node will store **8 partitions**.
-
-### **When to Customize Partitions?**
-1. **High Workload Scenarios**:
-   - Increase the number of partitions to spread the workload across more nodes and CPUs.
-2. **Optimized Query Performance**:
-   - By having smaller partitions, query execution can leverage parallelism for better performance.
-3. **Balance Data Distribution**:
-   - Ensure balanced partitioning for consistent load distribution across nodes.
-
-### **Diagram Reference:**
-Refer to the "Setting the Number of Partitions" diagram to see how partitions are distributed when explicitly defined.
+*Image Reference: Fits with "Setting the Number of Partitions."*
 
 ---
 
-## **Benefits of Partitioning in SingleStore**
-1. **Scalability:**
-   - Distributes data and workload across multiple nodes to scale seamlessly.
-2. **Parallel Query Execution:**
-   - Queries are processed in parallel across partitions, improving performance.
-3. **High Availability:**
-   - Replica partitions provide fault tolerance and ensure minimal downtime.
-4. **Flexible Configuration:**
-   - You can adjust the number of partitions to fit specific workload requirements.
+## Query Performance and Partitions
+
+### Single Query — 1 Partition/Core
+- A single query leverages one partition per core.
+- Efficient for workloads with fewer concurrent queries but higher resource demands per query.
+
+*Image Reference: Fits with "Single Query — 1 Partition/Core."*
 
 ---
 
-This document provides an overview of database partitioning in SingleStore, explaining both default behavior and customization options. Proper partitioning ensures that your database performs optimally and scales efficiently with your needs.
+### Single Query — 4 Partitions/Core
+- With 4 partitions per core, SingleStore incurs **latency from partition switching** during query execution.
+- This setup is better suited for scenarios requiring higher data concurrency but may affect single-query performance.
+
+*Image Reference: Fits with "Single Query — 4 Partitions/Core."*
+
+---
+
+### Multiple Queries — 1 Partition/4 Cores
+- Designed for concurrent query execution:
+  - Each query uses its own partition, sharing CPU cores among them.
+- Optimizes system utilization for high-concurrency environments.
+
+*Image Reference: Fits with "Multiple Queries — 1 Partition/4 Cores."*
+
+---
+
+### Single Query — 1 Partition/4 Cores
+- Allocates all CPU resources for a single query on one partition.
+- Ideal for low-concurrency workloads with high resource demands per query.
+
+*Image Reference: Fits with "Single Query — 1 Partition/4 Cores."*
+
+---
+
+## Flexible Parallelism
+- Enables a single query to execute across multiple partitions.
+- Significantly boosts performance for data-intensive workloads by leveraging all available CPU cores.
+
+*Image Reference: Fits with "Flexible Parallelism."*
+
+---
+
+## Partition Affinity
+- Ensures that a query operates on a specific partition.
+- **Limitation**: Reduces parallelism by restricting the query to fewer resources.
+
+*Image Reference: Fits with "Partition Affinity."*
+
+---
+
+## Cluster Expansion
+- Partitions are automatically rebalanced when new nodes are added to the cluster.
+- Ensures that workloads remain evenly distributed across all nodes for scalability.
+
+*Image Reference: Fits with "Cluster Expansion."*
+
+---
+
+## Column Segments
+- **Definition**: Basic storage unit in SingleStore, consisting of up to **1,024,000 rows by default**.
+- **Key Features**:
+  - Sorted on a designated sort key.
+  - Metadata includes the maximum and minimum values for fast query filtering.
+- Use smaller column segments for more granular filtering or larger ones for compression.
+
+*Image Reference: Fits with "Column Segments."*
+
+---
+
+## How Many Records per Segment
+- Configure the size of column segments to optimize for performance:
+  ```sql
+  SET GLOBAL columnstore_segment_rows=n;
+  CREATE TABLE my_table (... SORT KEY(id) WITH (columnstore_segment_rows=n));
+  ```
+  - **Smaller Segments**:
+    - Faster filtering with more segment elimination.
+  - **Larger Segments**:
+    - Greater compression and reduced disk usage.
+
+*Image Reference: Fits with "How Many Records per Segment."*
+
+---
+
+## Summary of Partition Benefits
+1. **Scalability**: Partitions allow datasets to be split across multiple nodes.
+2. **Parallel Processing**: Enables faster query execution.
+3. **Fault Tolerance**: Replica partitions ensure data availability in case of node failure.
+4. **Customizability**: Flexible partition settings accommodate diverse workloads.
+
+---
+
+Would you like to add anything else or adjust specific sections?
